@@ -1,5 +1,7 @@
 <script lang="ts">
+  import OutputImages from "./lib/components/OutputImages/OutputImages.svelte";
   import { v4 as uuidv4 } from "uuid";
+  import type { OutputImage } from "./lib/components/OutputImages/types";
 
   const HEALTH_PING_INTERVAL = 5; // seconds
 
@@ -165,12 +167,15 @@
         return;
       }
 
-      let img = {};
-      img.width = parseInt(reqBody.width);
-      img.height = parseInt(reqBody.height);
-      img.src = imgBody;
-      img.seed = seed;
-      img.promptPreview = promptValue.substring(0, 50);
+      let img: OutputImage = {
+        id: uuidv4(),
+        width: reqBody.width,
+        height: reqBody.height,
+        src: imgBody,
+        seed,
+        fileName: `${promptValue.substring(0, 50)}_seed_${seed}_${uuidv4()}`,
+      };
+
       images = [...images, img];
       console.log(images);
     }
@@ -320,21 +325,7 @@
 
   <div id="outputMsg" />
 
-  <div id="images">
-    {#each images as image}
-      <a
-        href={image.src}
-        download={`${image.promptPreview}_seed_${image.seed}_${uuidv4()}`}
-      >
-        <img
-          alt="hi"
-          src={image.src}
-          width={image.width}
-          height={image.height}
-        />
-      </a>
-    {/each}
-  </div>
+  <OutputImages {images} />
 
   <div id="footer">
     <p>
