@@ -2,10 +2,12 @@
   import OutputImages from "./lib/components/OutputImages/OutputImages.svelte";
   import { v4 as uuidv4 } from "uuid";
   import type { OutputImage } from "./lib/components/OutputImages/types";
+  import LoadingSpinner from "./lib/components/LoadingSpinner.svelte";
 
-  const HEALTH_PING_INTERVAL = 5; // seconds
+  const HEALTH_PING_INTERVAL = 35; // seconds
 
   let serverStatus = "offline";
+  let generatingImages = false;
   let images = [];
   let shouldDisplayConfig = false;
   let randomSeedChecked = true;
@@ -17,6 +19,7 @@
   let guidanceScaleValue = 75;
   let widthValue = 512;
   let heightValue = 512;
+
   function setStatus(statusType, msg, msgType) {
     let el = "";
 
@@ -60,7 +63,8 @@
   }
 
   async function makeImage() {
-    console.log("Making image");
+    generatingImages = true;
+
     setStatus("request", "fetching..");
 
     let btn = document.querySelector("#makeImage");
@@ -179,7 +183,7 @@
       images = [...images, img];
       console.log(images);
     }
-
+    generatingImages = false;
     setStatus("request", "done", "success");
 
     // if (random_seed.checked) {
@@ -325,6 +329,12 @@
 
   <div id="outputMsg" />
 
+  {#if generatingImages}
+    <div class="spinner-wrapper">
+      <LoadingSpinner />
+    </div>
+  {/if}
+
   <OutputImages {images} />
 
   <div id="footer">
@@ -344,6 +354,12 @@
 </main>
 
 <style>
+  .spinner-wrapper {
+    margin-top: 2rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
   #prompt {
     width: 50vw;
     height: 50pt;
