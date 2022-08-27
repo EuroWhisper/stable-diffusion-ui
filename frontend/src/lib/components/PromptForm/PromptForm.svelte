@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { FormData } from "./types";
 
+  export let onGenerateClick: (formdata: FormData) => void;
+  export let generatingImages: boolean;
+
   let shouldDisplayConfig = false;
 
   let formData: FormData = {
@@ -16,8 +19,6 @@
   };
 
   let guidanceScaleLabel = formData.guidanceScaleValue / 10;
-
-  export let onGenerateClick: (formdata: FormData) => void;
 
   function updateGuidanceScale() {
     let guidanceScale = document.querySelector("#guidance_scale");
@@ -196,6 +197,9 @@
   </div>
 {/if}
 
-<button on:click={() => onGenerateClick(formData)} id="makeImage"
-  >Make Image</button
+<button
+  disabled={generatingImages}
+  on:click={() => onGenerateClick(formData)}
+  id="makeImage"
+  >{generatingImages ? "Generating images..." : "Generate image(s)"}</button
 >

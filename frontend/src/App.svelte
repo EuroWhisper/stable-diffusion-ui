@@ -57,12 +57,6 @@
   async function makeImage(formData: FormData) {
     generatingImages = true;
 
-    setStatus("request", "fetching..");
-
-    let btn = document.querySelector("#makeImage");
-    btn.innerHTML = "Processing..";
-    btn.disabled = true;
-
     let outputMsg = document.querySelector("#outputMsg");
     outputMsg.innerHTML = "Fetching..";
 
@@ -84,12 +78,11 @@
       guidance_scale: formData.guidanceScaleValue / 10,
       width: formData.widthValue,
       height: formData.heightValue,
-      seed: formData.seed,
+      seed: formData.seedValue,
     };
     console.log(reqBody);
-    let res = "";
     let time = new Date().getTime();
-
+    let res;
     try {
       res = await fetch("http://localhost:8000/image", {
         method: "POST",
@@ -117,7 +110,7 @@
       } else {
         res = await res.json();
 
-        if (res.status !== "succeeded") {
+        if (res.statusText !== "succeeded") {
           let msg = "";
           if (res.detail !== undefined) {
             msg =
@@ -131,11 +124,7 @@
       }
     } catch (e) {
       console.log("request error", e);
-      setStatus("request", "error", "error");
     }
-
-    btn.innerHTML = "Make Image";
-    btn.disabled = false;
 
     // const shouldPlaySound = document.querySelector('#sound_toggle').checked
 
@@ -195,17 +184,6 @@
     }
   }
 
-  let random_seed = document.querySelector("#random_seed");
-  function checkRandomSeed() {
-    let seed = document.querySelector("#seed");
-    if (random_seed.checked) {
-      seed.disabled = true;
-      seed.value = "random";
-    } else {
-      seed.disabled = false;
-    }
-  }
-
   setInterval(healthCheck, HEALTH_PING_INTERVAL * 1000);
 </script>
 
@@ -218,7 +196,7 @@
   </div>
 
   <br />
-  <PromptForm onGenerateClick={handleMakeImage} />
+  <PromptForm {generatingImages} onGenerateClick={handleMakeImage} />
   <br /><br />
 
   <div id="outputMsg" />
@@ -233,14 +211,6 @@
 
   <div id="footer">
     <p>
-      Please feel free to <a
-        href="https://github.com/cmdr2/stable-diffusion-ui/issues"
-        target="_blank">file an issue</a
-      >
-      or <a href="mailto:sd@cmdr2.org" target="_blank">email me</a> if you have any
-      problems or suggestions in using this interface.
-    </p>
-    <p>
       <b>Disclaimer:</b> I am not responsible for any images generated using this
       interface.
     </p>
@@ -253,25 +223,6 @@
     width: 100%;
     display: flex;
     justify-content: center;
-  }
-  #prompt {
-    width: 50vw;
-    height: 50pt;
-  }
-  @media screen and (max-width: 600px) {
-    #prompt {
-      width: 95%;
-    }
-  }
-  #configHeader {
-    margin-top: 5px;
-    margin-bottom: 5px;
-    font-size: 10pt;
-  }
-  #config {
-    font-size: 9pt;
-    margin-bottom: 5px;
-    padding-left: 10px;
   }
   #outputMsg {
     font-size: small;
