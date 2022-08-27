@@ -14,12 +14,15 @@
     widthValue: 512,
     heightValue: 512,
   };
+
+  let guidanceScaleLabel = formData.guidanceScaleValue / 10;
+
   export let onGenerateClick: (formdata: FormData) => void;
 
   function updateGuidanceScale() {
     let guidanceScale = document.querySelector("#guidance_scale");
     let label = document.querySelector("#guidance_scale_value");
-    label.innerHTML = guidanceScale.value / 10;
+    guidanceScaleLabel = formData.guidanceScaleValue / 10;
   }
 
   function handlePromptChange(
@@ -119,8 +122,7 @@
     on:click={() => {
       shouldDisplayConfig = true;
     }}
-    id="configToggleBtn"
-    href="#">show</a
+    id="configToggleBtn">show</a
   >]
 </div>
 
@@ -190,7 +192,7 @@
       type="range"
       min="10"
       max="200"
-    /> <span id="guidance_scale_value" /><br />
+    /> <span id="guidance_scale_value">{guidanceScaleLabel}</span><br />
   </div>
 {/if}
 
