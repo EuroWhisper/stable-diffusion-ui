@@ -9,29 +9,9 @@
   const HEALTH_PING_INTERVAL = 35; // seconds
 
   let serverStatus = "offline";
+  let outputMessage;
   let generatingImages = false;
   let images = [];
-
-  function setStatus(statusType, msg, msgType) {
-    let el = "";
-
-    if (statusType === "server") {
-      el = "#serverStatus";
-      serverStatus = msg;
-    } else if (statusType === "request") {
-      el = "#reqStatus";
-    }
-
-    if (msgType == "error") {
-      msg = '<span style="color: red">' + msg + "<span>";
-    } else if (msgType == "success") {
-      msg = '<span style="color: green">' + msg + "<span>";
-    }
-
-    if (el) {
-      document.querySelector(el).innerHTML = msg;
-    }
-  }
 
   function playSound() {
     const audio = new Audio("/media/ding.mp3");
@@ -57,8 +37,7 @@
   async function makeImage(formData: FormData) {
     generatingImages = true;
 
-    let outputMsg = document.querySelector("#outputMsg");
-    outputMsg.innerHTML = "Fetching..";
+    outputMessage = "Fetching..";
 
     let seed = formData.randomSeedChecked
       ? Math.floor(Math.random() * 10000)
@@ -71,10 +50,10 @@
       guidance_scale: formData.guidanceScaleValue / 10,
       width: formData.widthValue,
       height: formData.heightValue,
-      seed: formData.seedValue,
+      seed: seed,
     };
     console.log(reqBody);
-    let time = new Date().getTime();
+    let startTime = new Date().getTime();
     let res;
 
     try {
@@ -95,10 +74,9 @@
 
     res = await res.json();
 
-    time = new Date().getTime() - time;
-    time /= 1000;
+    const requestTime = (new Date().getTime() - startTime) / 1000;
 
-    outputMsg.innerHTML = "Processed in " + time + " seconds. Seed: " + seed;
+    outputMessage = "Processed in " + requestTime + " seconds. Seed: " + seed;
 
     console.log(res);
 
@@ -109,7 +87,6 @@
         imgBody = res.output[idx];
       } catch (e) {
         console.log(imgBody);
-        setStatus("request", "invalid image", "error");
         return;
       }
 
@@ -129,12 +106,9 @@
       console.log(images);
     }
     generatingImages = false;
-    setStatus("request", "done", "success");
   }
 
   async function handleMakeImage(formData: FormData) {
-    images = [];
-
     for (let i = 0; i < formData.numBatchesValue; i++) {
       await makeImage(formData);
     }
@@ -155,7 +129,7 @@
   <PromptForm {generatingImages} onGenerateClick={handleMakeImage} />
   <br /><br />
 
-  <div id="outputMsg" />
+  {#if outputMessage} <div id="outputMsg">{outputMessage}</div>{/if}
 
   {#if generatingImages}
     <div class="spinner-wrapper">

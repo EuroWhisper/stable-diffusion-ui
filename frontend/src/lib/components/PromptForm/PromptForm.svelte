@@ -116,6 +116,7 @@
   on:change={handlePromptChange}
   id="prompt"
   placeholder="a photograph of an astronaut riding a horse"
+  rows="5"
 /><br />
 
 <div id="configHeader">
@@ -203,3 +204,9 @@
   id="makeImage"
   >{generatingImages ? "Generating images..." : "Generate image(s)"}</button
 >
+
+<style>
+  #prompt {
+    width: 50rem;
+  }
+</style>
