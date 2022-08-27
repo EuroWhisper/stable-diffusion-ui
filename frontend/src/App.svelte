@@ -60,13 +60,6 @@
     let outputMsg = document.querySelector("#outputMsg");
     outputMsg.innerHTML = "Fetching..";
 
-    function logError(msg, res) {
-      outputMsg.innerHTML =
-        '<span style="color: red">Error: ' + msg + "</span>";
-      console.log("request error", res);
-      setStatus("request", "error", "error");
-    }
-
     let seed = formData.randomSeedChecked
       ? Math.floor(Math.random() * 10000)
       : formData.seedValue;
@@ -83,6 +76,7 @@
     console.log(reqBody);
     let time = new Date().getTime();
     let res;
+
     try {
       res = await fetch("http://localhost:8000/image", {
         method: "POST",
@@ -91,55 +85,22 @@
         },
         body: JSON.stringify(reqBody),
       });
-
-      if (res.status != 200) {
-        if (serverStatus === "online") {
-          logError(
-            "Stable Diffusion had an error: " +
-              (await res.text()) +
-              ". This happens sometimes. Maybe modify the prompt or seed a little bit?",
-            res
-          );
-        } else {
-          logError(
-            "Stable Diffusion is still starting up, please wait. If this goes on beyond a few minutes, Stable Diffusion has probably crashed.",
-            res
-          );
-        }
-        res = undefined;
-      } else {
-        res = await res.json();
-
-        if (res.statusText !== "succeeded") {
-          let msg = "";
-          if (res.detail !== undefined) {
-            msg =
-              res.detail[0].msg + " in " + JSON.stringify(res.detail[0].loc);
-          } else {
-            msg = res;
-          }
-          logError(msg, res);
-          res = undefined;
-        }
-      }
     } catch (e) {
       console.log("request error", e);
     }
-
-    // const shouldPlaySound = document.querySelector('#sound_toggle').checked
-
-    // if (shouldPlaySound) {
-    //     playSound()
-    // }
 
     if (!res) {
       return;
     }
 
+    res = await res.json();
+
     time = new Date().getTime() - time;
     time /= 1000;
 
     outputMsg.innerHTML = "Processed in " + time + " seconds. Seed: " + seed;
+
+    console.log(res);
 
     for (let idx in res.output) {
       let imgBody = "";
@@ -169,11 +130,6 @@
     }
     generatingImages = false;
     setStatus("request", "done", "success");
-
-    // if (random_seed.checked) {
-    //     let seedEl = document.querySelector("#seed")
-    //     seedEl.value = seed
-    // }
   }
 
   async function handleMakeImage(formData: FormData) {
