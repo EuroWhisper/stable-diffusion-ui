@@ -3,22 +3,14 @@
   import { v4 as uuidv4 } from "uuid";
   import type { OutputImage } from "./lib/components/OutputImages/types";
   import LoadingSpinner from "./lib/components/LoadingSpinner.svelte";
+  import PromptForm from "./lib/components/PromptForm/PromptForm.svelte";
+  import type { FormData } from "./lib/components/PromptForm/types";
 
   const HEALTH_PING_INTERVAL = 35; // seconds
 
   let serverStatus = "offline";
   let generatingImages = false;
   let images = [];
-  let shouldDisplayConfig = false;
-  let randomSeedChecked = true;
-  let seedValue = 343;
-  let promptValue = "";
-  let numBatchesValue = 1;
-  let numOutputsValue = 1;
-  let numInferenceStepsValue = 50;
-  let guidanceScaleValue = 75;
-  let widthValue = 512;
-  let heightValue = 512;
 
   function setStatus(statusType, msg, msgType) {
     let el = "";
@@ -62,7 +54,7 @@
     }
   }
 
-  async function makeImage() {
+  async function makeImage(formData: FormData) {
     generatingImages = true;
 
     setStatus("request", "fetching..");
@@ -81,18 +73,18 @@
       setStatus("request", "error", "error");
     }
 
-    let seed = randomSeedChecked
+    let seed = formData.randomSeedChecked
       ? Math.floor(Math.random() * 10000)
-      : seedValue;
+      : formData.seedValue;
 
     let reqBody = {
-      prompt: promptValue,
-      num_outputs: numOutputsValue,
-      num_inference_steps: numInferenceStepsValue,
-      guidance_scale: guidanceScaleValue / 10,
-      width: widthValue,
-      height: heightValue,
-      seed: seed,
+      prompt: formData.promptValue,
+      num_outputs: formData.numOutputsValue,
+      num_inference_steps: formData.numInferenceStepsValue,
+      guidance_scale: formData.guidanceScaleValue / 10,
+      width: formData.widthValue,
+      height: formData.heightValue,
+      seed: formData.seed,
     };
     console.log(reqBody);
     let res = "";
@@ -177,7 +169,10 @@
         height: reqBody.height,
         src: imgBody,
         seed,
-        fileName: `${promptValue.substring(0, 50)}_seed_${seed}_${uuidv4()}`,
+        fileName: `${formData.promptValue.substring(
+          0,
+          50
+        )}_seed_${seed}_${uuidv4()}`,
       };
 
       images = [...images, img];
@@ -192,18 +187,12 @@
     // }
   }
 
-  async function handleMakeImage() {
+  async function handleMakeImage(formData: FormData) {
     images = [];
 
-    for (let i = 0; i < numBatchesValue; i++) {
-      await makeImage();
+    for (let i = 0; i < formData.numBatchesValue; i++) {
+      await makeImage(formData);
     }
-  }
-
-  function updateGuidanceScale() {
-    let guidanceScale = document.querySelector("#guidance_scale");
-    let label = document.querySelector("#guidance_scale_value");
-    label.innerHTML = guidanceScale.value / 10;
   }
 
   let random_seed = document.querySelector("#random_seed");
@@ -221,7 +210,7 @@
 </script>
 
 <main>
-  <h3>Stable Diffusion - Quick UI</h3>
+  <h3>Stable Diffusion - Svelte UI</h3>
 
   <div id="status">
     Server status: <span id="serverStatus">checking..</span> | Request status:
@@ -229,102 +218,7 @@
   </div>
 
   <br />
-
-  <b>Prompt:</b><br />
-  <textarea
-    on:change={(e) => (promptValue = e.target.value)}
-    id="prompt"
-    placeholder="a photograph of an astronaut riding a horse"
-  /><br />
-
-  <div id="configHeader">
-    <b>Advanced settings:</b> [<a
-      on:click={() => {
-        shouldDisplayConfig = true;
-      }}
-      id="configToggleBtn"
-      href="#">show</a
-    >]
-  </div>
-  {#if shouldDisplayConfig}
-    <div id="config">
-      <input id="sound_toggle" name="sound_toggle" type="checkbox" checked />
-      <label for="sound_toggle">Enable Sound</label><br />
-      <label for="seed">Seed:</label>
-      <input
-        on:change={(e) => (seedValue = e.target.value)}
-        id="seed"
-        name="seed"
-        value="30000"
-      />
-      <input
-        on:input={checkRandomSeed}
-        id="random_seed"
-        name="random_seed"
-        type="checkbox"
-        checked={randomSeedChecked}
-      /> <label for="random_seed">Random Image</label> <br />
-      <label for="num_batches">Number of batches:</label>
-      <input
-        on:change={(e) => (numBatchesValue = e.target.value)}
-        type="number"
-        id="num_batches"
-        name="num_batches"
-        value="1"
-      /><br />
-      <label for="num_outputs">Number of outputs:</label>
-      <select
-        on:change={(e) => (numOutputsValue = e.target.value)}
-        id="num_outputs"
-        name="num_outputs"
-        value="1"
-        ><option value="1" selected>1</option><option value="4">4</option
-        ></select
-      ><br />
-      <label for="width">Width:</label>
-      <select
-        id="width"
-        on:change={(e) => (widthValue = e.target.value)}
-        name="width"
-        value="512"
-        ><option value="128">128</option><option value="256">256</option><option
-          value="512"
-          selected>512</option
-        ><option value="768">768</option><option value="1024">1024</option
-        ></select
-      ><br />
-      <label for="height">Height:</label>
-      <select
-        id="height"
-        on:change={(e) => (heightValue = e.target.value)}
-        name="height"
-        value="512"
-        ><option value="128">128</option><option value="256">256</option><option
-          value="512"
-          selected>512</option
-        ><option value="768">768</option></select
-      ><br />
-      <label for="num_inference_steps">Number of inference steps:</label>
-      <input
-        id="num_inference_steps"
-        on:change={(e) => (numInferenceStepsValue = e.target.value)}
-        name="num_inference_steps"
-        value="50"
-      /><br />
-      <label for="guidance_scale">Guidance Scale:</label>
-      <input
-        on:change={updateGuidanceScale}
-        id="guidance_scale"
-        name="guidance_scale"
-        value="75"
-        type="range"
-        min="10"
-        max="200"
-      /> <span id="guidance_scale_value" /><br />
-    </div>
-  {/if}
-
-  <button on:click={handleMakeImage} id="makeImage">Make Image</button>
+  <PromptForm onGenerateClick={handleMakeImage} />
   <br /><br />
 
   <div id="outputMsg" />
